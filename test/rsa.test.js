@@ -2,8 +2,6 @@
 
 /*global describe: true, it: true*/
 
-var crypto = require('crypto');
-
 var rsa = require('../lib/main').rsa;
 
 var assert = require('chai').assert;
@@ -24,7 +22,7 @@ describe('RSA tests', function() {
     });
 
     it('should encrypt test string with non-default padding', function(done) {
-      rsa.encrypt('test/data/public.pem', crypto.constants.RSA_PKCS1_PADDING, new Buffer('bazqux'), function(err, encrypted) {
+      rsa.encrypt('test/data/public.pem', rsa.padding.RSAES_PKCS1_V1_5, new Buffer('bazqux'), function(err, encrypted) {
         assert.ifError(err, 'we have an error');
 
         assert.isString(encrypted, 'a string is passed to the completion callback');
@@ -47,7 +45,7 @@ describe('RSA tests', function() {
     });
 
     it('should decrypt test string with non-default padding', function(done) {
-      rsa.decrypt('test/data/private.pem', crypto.constants.RSA_PKCS1_PADDING, message2, function(err, decrypted) {
+      rsa.decrypt('test/data/private.pem', rsa.padding.RSAES_PKCS1_V1_5, message2, function(err, decrypted) {
         assert.ifError(err, 'we have an error');
 
         assert.strictEqual(decrypted.toString('utf8'), new Buffer('bazqux').toString('utf8'), 'the test string is sucessfully decrypted');

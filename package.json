@@ -1,10 +1,13 @@
 {
   "name": "envelope-encryption-tools",
   "version": "0.1.0",
-  "main": "./lib/main.js",
+  "main": "lib/main.js",
   "description": "Lightweight encryption toolkit to support envelope encryption schemes",
   "engines": {
     "node": ">= 6"
+  },
+  "dependencies": {
+    "node-forge": "0.7.1"
   },
   "devDependencies": {
     "mocha": "= 3.5.0",
