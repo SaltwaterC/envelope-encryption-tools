@@ -16,7 +16,6 @@ Wraps the asymmetric encryption / decryption capabilities of [node-forge](https:
 Examples:
 
 ```javascript
-var crypto = require('crypto'); // needed for custom padding
 var rsa = require('envelope-encryption-tools').rsa;
 
 // uses the default node.js padding, rsa.padding.OAEP default
