@@ -4,7 +4,7 @@
 
 var crypto = require('crypto');
 
-var gcm = require('../lib/aes256gcm');
+var gcm = require('../lib/main').aes256gcm;
 
 var assert = require('chai').assert;
 

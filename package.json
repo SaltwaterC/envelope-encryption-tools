@@ -1,6 +1,7 @@
 {
   "name": "envelope-encryption-tools",
   "version": "0.1.0",
+  "main": "./lib/main.js",
   "description": "Lightweight encryption toolkit to support envelope encryption schemes",
   "engines": {
     "node": ">= 6"
@@ -12,6 +13,23 @@
     "find": "= 0.2.7",
     "jshint": "= 2.9.5"
   },
+  "homepage": "https://github.com/SaltwaterC/envelope-encryption-tools",
+  "author": {
+    "name": "Stefan Rusu",
+    "url": "http://www.saltwaterc.eu/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/SaltwaterC/envelope-encryption-tools.git"
+  },
+  "keywords": [
+    "encryption",
+    "decryption",
+    "rsa",
+    "aes",
+    "aes-256-gcm",
+    "stream"
+  ],
   "scripts": {
     "test": "jake test"
   }

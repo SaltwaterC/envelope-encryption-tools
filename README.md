@@ -4,7 +4,7 @@ Lightweight encryption toolkit to support envelope encryption schemes. It was im
 
 ## System requirements
 
- * node.js 0.12+
+ * node.js 6+
 
 ## Implemented tools
 
