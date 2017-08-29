@@ -5,12 +5,13 @@ Lightweight encryption toolkit to support envelope encryption schemes. It was im
 ## System requirements
 
  * node.js 6+
+ * [node-forge](https://github.com/digitalbazaar/forge) 0.7.1
 
 ## Implemented tools
 
 ### RSA encryption / decryption
 
-Wraps the asymmetric encryption / decryption capabilities of the core crypto module. The use case for envelope encryption is to encrypt with the RSA public key the symmetric key used to encrypt the actual data, then destroy the original symmetric encryption key. Then the only way to decrypt the data is to decrypt the symmetric key using the RSA private key - provided there's no way to factor the private key for the chosen length.
+Wraps the asymmetric encryption / decryption capabilities of [node-forge](https://github.com/digitalbazaar/forge). The core crypto module doesn't support Java's RSA/ECB/OAEPWithSHA-256AndMGF1Padding. The use case for envelope encryption is to encrypt with the RSA public key the symmetric key used to encrypt the actual data, then destroy the original symmetric encryption key. Then the only way to decrypt the data is to decrypt the symmetric key using the RSA private key - provided there's no way to factor the private key for the chosen length.
 
 Examples:
 
@@ -18,7 +19,9 @@ Examples:
 var crypto = require('crypto'); // needed for custom padding
 var rsa = require('envelope-encryption-tools').rsa;
 
-// uses the default node.js padding, RSA_PKCS1_OAEP_PADDING
+// uses the default node.js padding, rsa.padding.OAEP default
+// rsa.padding.OAEP is equal to crypto.constants.RSA_PKCS1_OAEP_PADDING
+// crypto.constants.RSA_PKCS1_OAEP_PADDING is actually equal to Number 4
 rsa.encrypt('path/to/public-key.pem', new Buffer('message1'), function(err, encrypted1) {
   if(err) {
     return callback(err);
@@ -26,9 +29,10 @@ rsa.encrypt('path/to/public-key.pem', new Buffer('message1'), function(err, encr
   callback(null, encrypted1); // encrypted1 is a base64 encoded String
 });
 
-// uses the default padding in Ruby / AWS SDK for Ruby
+// uses the default padding in Ruby / AWS SDK for Ruby / AWS SDK for Java
+// rsa.padding.PKCS1_V1_5 is equal to crypto.constants.RSA_PKCS1_PADDING
 // crypto.constants.RSA_PKCS1_PADDING is actually equal to Number 1
-rsa.encrypt('path/to/public/key.pem', crypto.constants.RSA_PKCS1_PADDING, new Buffer('message2'), function(err, encrypted) {
+rsa.encrypt('path/to/public/key.pem', rsa.padding.PKCS1_V1_5, new Buffer('message2'), function(err, encrypted) {
   // [...]
 });
 
@@ -40,7 +44,7 @@ rsa.decrypt('path/to/private-key.pem', 'encrypted1', function(err, decrypted1) {
 });
 
 // the padding used to encrypt must match the padding used to decrypt
-rsa.decrypt('path/to/private-key.pem', crypto.constants.RSA_PKCS1_PADDING, 'encrypted2', function(err, decrypted2) {
+rsa.decrypt('path/to/private-key.pem', rsa.padding.PKCS1_V1_5, 'encrypted2', function(err, decrypted2) {
   // [...]
 });
 ```
