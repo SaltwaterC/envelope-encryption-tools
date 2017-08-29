@@ -11,5 +11,8 @@
     "js-beautify": "= 1.6.14",
     "find": "= 0.2.7",
     "jshint": "= 2.9.5"
+  },
+  "scripts": {
+    "test": "jake test"
   }
 }

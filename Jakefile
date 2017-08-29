@@ -78,3 +78,10 @@ task('beautify', {
     });
   });
 });
+
+// task shortcuts
+task('b', ['beautify']);
+task('t', ['test']);
+task('m', ['mocha']);
+task('j', ['jshint']);
+task('s', ['setup']);
