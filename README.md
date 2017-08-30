@@ -90,16 +90,20 @@ var r = fs.createReadStream('file.encrypted', {
 
 Examples:
 
+The `key` and `iv` (a nonce, really, but keeping the var name consistent with the `crypto.createCipheriv` argument) may be generated using the built-in key generator:
+
 ```javascript
-var crypto = require('crypto');
 var gcm = require('envelope-encryption-tools').aes256gcm;
+gcm.keyGen(function(err, random) {
+  console.log(random);
+  // outputs an object with the structure
+  // {key: randomKey, iv: randomIv}
+});
+```
 
-// generate 256 bit key
-var key = crypto.randomBytes(32); // warning: blocking call without the second callback arg
-// generate 96 bit IV/nonce - 96 bits is a recommended value, some node.js versions used to enforce this
-// https://github.com/nodejs/node/pull/6376 - 96 bits still appears to be a minimum value in node.js
-var iv = crypto.randomBytes(12); // warning: blocking call without the second callback arg
+Then encrypt with the generated secret:
 
+```javascript
 // the MAC isn't appended to the stream
 var cipher = gcm.encrypt({
   key: key,
