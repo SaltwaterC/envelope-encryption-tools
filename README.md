@@ -29,9 +29,19 @@ rsa.encrypt('path/to/public-key.pem', new Buffer('message1'), function(err, encr
 });
 
 // uses the default padding in Ruby / AWS SDK for Ruby / AWS SDK for Java
+// but only for Envelope V1 keys
 // rsa.padding.PKCS1_V1_5 is equal to crypto.constants.RSA_PKCS1_PADDING
 // crypto.constants.RSA_PKCS1_PADDING is actually equal to Number 1
-rsa.encrypt('path/to/public/key.pem', rsa.padding.PKCS1_V1_5, new Buffer('message2'), function(err, encrypted) {
+rsa.encrypt('path/to/public-key.pem', rsa.padding.PKCS1_V1_5, new Buffer('message2'), function(err, encrypted) {
+  // [...]
+});
+
+// uses the rsa.padding.OAEP_SHA_256_MGF1_SHA_1 which is basically Java's
+// RSA/ECB/OAEPWithSHA-256AndMGF1Padding / AWS SDK for Java uses this
+// for Envelope V2 keys which surprisingly don't work in AWS SDK for Ruby
+// this scheme is the sole reason for going with the much slower forge rather
+// than the core crypto module
+rsa.encrypt('path/to/public-key.pem', rsa.padding.OAEP_SHA_256_MGF1_SHA_1, new Buffer('message3'), function(err, encrypted) {
   // [...]
 });
 
