@@ -31,6 +31,7 @@
     "rsa",
     "aes",
     "aes-256-gcm",
+    "aes-256-cbc",
     "stream"
   ],
   "scripts": {
