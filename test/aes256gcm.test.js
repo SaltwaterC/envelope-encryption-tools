@@ -10,7 +10,10 @@ describe('AES-256-GCM tests', function() {
   var key, iv, message1, message2, mac1, mac2;
 
   before(function(done) {
+    // Warning: don't reuse key and iv in actual code
     gcm.keyGen(function(err, random) {
+      assert.ifError(err);
+
       key = random.key;
       iv = random.iv;
 
