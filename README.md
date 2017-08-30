@@ -60,9 +60,9 @@ rsa.decrypt('path/to/private-key.pem', rsa.padding.PKCS1_V1_5, 'encrypted2', fun
 
 ### AES-256-GCM encryption / decryption streams
 
-Wraps aes-256-gcm cipher in a duplex Stream. It appears that `crypto.createCipheriv` is a factory which returns a Stream object when in fact, it isn't. Some ciphers, notably aes-256-gcm (DUH), don't create node.js duplex streams with `crypto.createCipheriv` which makes aes-256-gcm tad difficult to be used in a pipeline. Basically `crypto.createCipheriv` is wrapped as a `stream.Transform` child.
+Wraps the AES-256-GCM cipher in a duplex Stream. It appears that `crypto.createCipheriv` is a factory which returns a Stream object when in fact, it isn't. Some ciphers, notably aes-256-gcm (DUH), don't create node.js duplex streams with `crypto.createCipheriv` which makes AES-256-GCM tad difficult to be used in a pipeline. Basically `crypto.createCipheriv` is wrapped as a `stream.Transform` child.
 
-This is different from the [aes-gcm-stream](https://github.com/MattSurabian/aes-gcm-stream) module though. While it robs few good ideas from where, notably the `stream.Transform` wrappers, it doesn't make any of the assumptions made there: the IV/nonce isn't prepended to the stream, the IV/nonce size isn't assumed to be 96 bits (i.e it accepts an arbitrary value, per GCM spec - provided that node.js supports it), the MAC appending to the stream is optional. It acts like an actual stream, rather than buffering the ciphertext in memory as the goal is to use this in a streaming pipeline with objects which are much larger than the available memory. In a pipeline with gzip compression before encryption it has been revealed that the memory consumption stays around 100 MB. The maximum object size should be ~64 GiB to avoid the probability of going over the birthday bound.
+[aes-gcm-stream](https://github.com/MattSurabian/aes-gcm-stream) implements a stream-ish solution, however this one isn't exactly the same. While it robs few good ideas from where, notably the `stream.Transform` wrappers, it doesn't make any of the assumptions made there: the IV/nonce isn't prepended to the stream, the IV/nonce size isn't assumed to be 96 bits (i.e it accepts an arbitrary value, per GCM spec - provided that node.js supports it), the MAC appending to the stream is optional. It acts like an actual stream, rather than buffering the ciphertext in memory as the goal is to use this in a streaming pipeline with objects which are much larger than the available memory. In a pipeline with gzip compression before encryption it has been revealed that the memory consumption stays around 100 MB. The maximum object size should be ~64 GiB to avoid the probability of going over the birthday bound.
 
 This introduces the issue of storing the MAC separately for streams of unknown size or streams where the last 16 bytes can't be read via a range read, however, this is much better than having to buffer the whole ciphertext stream in memory. For anything else, is better to enable `appendMac`.
 
@@ -98,6 +98,7 @@ gcm.keyGen(function(err, random) {
   console.log(random);
   // outputs an object with the structure
   // {key: randomKey, iv: randomIv}
+  // generates 256 bit key and 96 bit nonce
 });
 ```
 
@@ -108,7 +109,7 @@ Then encrypt with the generated secret:
 var cipher = gcm.encrypt({
   key: key,
   iv: iv
-}); // this is a duplex Stream object - input plain text - output ciphertext stream
+}); // this is a duplex Stream object - input plaintext - output ciphertext stream
 
 // to get the MAC, attach an end event listener
 cipher.on('end', function() {
@@ -120,12 +121,48 @@ var cipher = gcm.encrypt({
   key: key,
   iv: iv,
   appendMac: true // must be Boolean true to enable
-}); // this is a duplex Stream object - input plain text - output ciphertext stream + MAC
+}); // this is a duplex Stream object - input plaintext - output ciphertext stream + MAC
 
 // the decryption stream
 var decipher = gcm.decrypt({
   key: key,
   iv: iv,
   mac: mac // must be fetched from separate storage or from the end of the ciphertext stream if it was appended
+}); // this is a duplex Stream object - input ciphertext - output plaintext
+```
+
+### AES-256-CBC encryption / decryption streams
+
+This submodule is just a thin wrapper over `crypto.createCipheriv`, `crypto.createDecipheriv`, and the key generator built into this library. This has been added for interoperability reasons only i.e decrypting objects using Envelope V1 and it should not be used for creating new objects.
+
+While AES-256-CBC provides anonymity, it doesn't provide authenticity for the data. There are schemes which provide authenticated encryption with associated data (AEAD) for AES-CBC, notably the [Authenticated Encryption with AES-CBC and HMAC-SHA](https://tools.ietf.org/html/draft-mcgrew-aead-aes-cbc-hmac-sha2-05) IETF draft and the modified scheme of this which is published with [RFC7518](https://tools.ietf.org/html/rfc7518) (part of JSON Web Signature). However, the same practical recommendation of encrypting up to 64 GiB objects applies, therefore AES-256-GCM is the better option as AES-GCM has been designed with AEAD from ground up.
+
+Examples:
+
+Generate key and iv:
+
+```javascript
+var cbc = require('envelope-encryption-tools').aes256gcm;
+cbc.keyGen(function(err, random) {
+  console.log(random);
+  // outputs an object with the structure
+  // {key: randomKey, iv: randomIv}
+  // generates 256 bit key and 128 bit iv
 });
+```
+
+Then encrypt with the generated secret:
+
+```javascript
+// de encryption stream
+var cipher = cbc.encrypt({
+  key: key,
+  iv: iv
+}); // this is a duplex Stream object - input plaintext - output ciphertext stream
+
+// the decryption stream
+var decipher = gcm.decrypt({
+  key: key,
+  iv: iv
+}); // this is a duplex Stream object - input ciphertext - output plaintext
 ```
