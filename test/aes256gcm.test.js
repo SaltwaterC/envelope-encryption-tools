@@ -2,8 +2,6 @@
 
 /*global describe: true, it: true, before: true*/
 
-var crypto = require('crypto');
-
 var gcm = require('../lib/main').aes256gcm;
 
 var assert = require('chai').assert;
@@ -12,14 +10,11 @@ describe('AES-256-GCM tests', function() {
   var key, iv, message1, message2, mac1, mac2;
 
   before(function(done) {
-    crypto.randomBytes(32, function(err, buf) {
-      assert.ifError(err, 'we have an error');
-      key = buf;
-      crypto.randomBytes(12, function(err, buf) {
-        assert.ifError(err, 'we have an error');
-        iv = buf;
-        done();
-      });
+    gcm.keyGen(function(err, random) {
+      key = random.key;
+      iv = random.iv;
+
+      done();
     });
   });
 
