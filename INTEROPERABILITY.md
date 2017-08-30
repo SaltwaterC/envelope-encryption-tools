@@ -1,5 +1,11 @@
 Brain dump:
 
+```shell
+openssl pkcs8 -topk8 -inform PEM -outform DER -in private.pem -out private.der -nocrypt
+openssl rsa -in private.pem -pubout -outform DER -out public.der
+openssl rsa -in private.pem -pubout -out public.pem
+```
+
 ```java
 /*
  * Copyright 2010-2013 Amazon.com, Inc. or its affiliates. All Rights Reserved.
