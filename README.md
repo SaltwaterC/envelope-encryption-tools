@@ -166,3 +166,47 @@ var decipher = gcm.decrypt({
   iv: iv
 }); // this is a duplex Stream object - input ciphertext - output plaintext
 ```
+
+## Envelope specifications
+
+The actual envelope encryption implementation is outside the scope of this module. However, this module provides the tools to implement the various schemes. Amazon's documentation is bit scarce and the support within their SDK's is inconsistent. The best description is probably this bit from the AWS SDK for Java [documentation](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/package-summary.html) - but the spec is incomplete.
+
+Using the AWS SDK for Java as the de-facto implementation to test against since it's the only SDK which implements Envelope V2. The Ruby SDK implements partial support for V2, but the functionality is broken. The implementation would only follow a subset of the Envelope V2 specifications. The V1 spec doesn't allow any wiggle room, but AES-256-GCM is clearly preferred over AES-256-CBC which definitely means V2.
+
+Since the headers are AWS S3 metadata headers, their full name is like `x-amz-meta-x-amz-key`. Using the short names to document their purpose.
+
+Definitions:
+
+ * `BASE64` - base64 function
+ * `RSA_ENCRYPT` - RSA encryption function taking a public key, a padding, and a payload to encrypt
+ * `PUBLIC_KEY` - RSA public key
+ * `PKCS1_V1_5` - RSA padding PKCS#1 V1.5
+ * `OAEP_SHA_256_MGF1_SHA_1` - RSA padding specific to Java where it's known as RSA/ECB/OAEPWithSHA-256AndMGF1Padding, basically a modified PKCS#1 RSAES-OAEP with SHA-256 as hashing function and SHA1 as mask generation function (the default MGF1)
+ * `AES_256_KEY` - randomly generated 256 bit key for AES encryption
+ * `IV` - randomly generated 128 bit initialisation vector to be used with AES-256-CBC
+ * `NONCE` - randomly generated 96 bit nonce to be used with AES-256-GCM - bear in mind that this library uses "iv" as variable name
+
+`x-amz-matdesc` won't be used, but it's being set to an empty JSON object to avoid interoperability issues. Please observe the [INTEROPERABILITY](INTEROPERABILITY.md) document for more details.
+
+### Envelope V1
+
+ * `x-amz-key` - BASE64(RSA_ENCRYPT(PUBLIC_KEY, PKCS1_V1_5, AES_256_KEY))
+ * `x-amz-iv` - BASE64(IV)
+ * `x-amz-matdesc` - "{}"
+
+The cipher used is AES-256-CBC.
+
+### Envelope V2
+
+ * `x-amz-key-v2` - BASE64(RSA_ENCRYPT(PUBLIC_KEY, OAEP_SHA_256_MGF1_SHA_1, AES_256_KEY))
+ * `x-amz-iv` - BASE64(NONCE)
+ * `x-amz-matdesc` - "{}"
+ * `x-amz-wrap-alg` - "RSA/ECB/OAEPWithSHA-256AndMGF1Padding"
+ * `x-amz-cek-alg` - "AES/GCM/NoPadding"
+ * `x-amz-tag-len` - "128"
+
+`x-amz-wrap-alg` supports multiple values, but it would always be set as "RSA/ECB/OAEPWithSHA-256AndMGF1Padding". The goal is to use asymmetric encryption for the enveloped AES-256 key and this is the only mode which supports this without KMS.
+
+`x-amz-cek-alg` supports multiple values, however, "AES/CBC/PKCS5Padding" provides no actual benefit over Envelope V1. One might argue that the padding for the key encryption is different. This value would always be set as "AES/GCM/NoPadding".
+
+`x-amz-tag-len` would always be set as "128" to indicate the length of the (G)MAC which is appended to the ciphertext.
