@@ -1,6 +1,6 @@
 ## About [![build status](https://secure.travis-ci.org/SaltwaterC/envelope-encryption-tools.png?branch=master)](https://travis-ci.org/SaltwaterC/envelope-encryption-tools)
 
-Lightweight encryption toolkit to support envelope encryption schemes. It was implemented for supporting Amazon S3 client-side encryption in node.js i.e it can produce a cipher stream which may be decrypted by the AWS SDK's which implement the client-side encryption (Java, Ruby, Go). However, the implementation itself is general purpose. In fact, it uses the node.js defaults which don't really match the defaults in Amazon's libraries. The scope isn't restricted to the envelope encryption schemes supported by Amazon.
+Lightweight encryption toolkit to support envelope encryption schemes. It was implemented for supporting Amazon S3 client-side encryption in node.js i.e it can produce a ciphertext which may be decrypted by the AWS SDK's which implement the client-side encryption (Java, Ruby, Go). However, the implementation itself is general purpose. In fact, it uses the node.js defaults which don't really match the defaults in Amazon's libraries. The scope isn't restricted to the envelope encryption schemes supported by Amazon.
 
 ## System requirements
 
@@ -62,11 +62,11 @@ rsa.decrypt('path/to/private-key.pem', rsa.padding.PKCS1_V1_5, 'encrypted2', fun
 
 Wraps aes-256-gcm cipher in a duplex Stream. It appears that `crypto.createCipheriv` is a factory which returns a Stream object when in fact, it isn't. Some ciphers, notably aes-256-gcm (DUH), don't create node.js duplex streams with `crypto.createCipheriv` which makes aes-256-gcm tad difficult to be used in a pipeline. Basically `crypto.createCipheriv` is wrapped as a `stream.Transform` child.
 
-This is different from the [aes-gcm-stream](https://github.com/MattSurabian/aes-gcm-stream) module though. While it robs few good ideas from where, notably the `stream.Transform` wrappers, it doesn't make any of the assumptions made there: the IV/nonce isn't prepended to the stream, the IV/nonce size isn't assumed to be 96 bits (i.e it accepts an arbitrary value, per GCM spec - provided that node.js supports it), the MAC appending to the stream is optional. It acts like an actual stream, rather than buffering the cipher stream in memory as the goal is to use this in a streaming pipeline with objects which are much larger than the available memory. In a pipeline with gzip compression before encryption it has been revealed that the memory consumption stays around 100 MB. The maximum object size is 64 GiB due to GCM's limitation.
+This is different from the [aes-gcm-stream](https://github.com/MattSurabian/aes-gcm-stream) module though. While it robs few good ideas from where, notably the `stream.Transform` wrappers, it doesn't make any of the assumptions made there: the IV/nonce isn't prepended to the stream, the IV/nonce size isn't assumed to be 96 bits (i.e it accepts an arbitrary value, per GCM spec - provided that node.js supports it), the MAC appending to the stream is optional. It acts like an actual stream, rather than buffering the ciphertext in memory as the goal is to use this in a streaming pipeline with objects which are much larger than the available memory. In a pipeline with gzip compression before encryption it has been revealed that the memory consumption stays around 100 MB. The maximum object size is ~64 GiB.
 
-This introduces the issue of storing the MAC separately for streams of unknown size or streams where the last 16 bytes can't be read via a range read, however, this is much better than having to buffer the whole cipher stream in memory. For anything else, is better to enable `appendMac`.
+This introduces the issue of storing the MAC separately for streams of unknown size or streams where the last 16 bytes can't be read via a range read, however, this is much better than having to buffer the whole ciphertext stream in memory. For anything else, is better to enable `appendMac`.
 
-Amazon S3 supports range requests which is part of the HTTP spec. Their SDK's use this feature to read the appended MAC and the cipher stream without the MAC to be passed to the decryption routine.
+Amazon S3 supports range requests which is part of the HTTP spec. Their SDK's use this feature to read the appended MAC and the ciphertext stream without the MAC to be passed to the decryption routine.
 
 If the stream ends up in a file, then it is a matter of reading the MAC before decryption:
 
@@ -104,11 +104,11 @@ var iv = crypto.randomBytes(12); // warning: blocking call without the second ca
 var cipher = gcm.encrypt({
   key: key,
   iv: iv
-}); // this is a duplex Stream object - input plain text - output cipher stream
+}); // this is a duplex Stream object - input plain text - output ciphertext stream
 
 // to get the MAC, attach an end event listener
 cipher.on('end', function() {
-  console.log(cipher.mac); // the MAC is only available after the cipher stream is finished
+  console.log(cipher.mac); // the MAC is only available after the ciphertext stream is finished
 });
 
 // the MAC is automatically appended to the stream - this isn't the default as the decryption isn't a trivial exercise
@@ -116,12 +116,12 @@ var cipher = gcm.encrypt({
   key: key,
   iv: iv,
   appendMac: true // must be Boolean true to enable
-}); // this is a duplex Stream object - input plain text - output cipher stream + MAC
+}); // this is a duplex Stream object - input plain text - output ciphertext stream + MAC
 
 // the decryption stream
 var decipher = gcm.decrypt({
   key: key,
   iv: iv,
-  mac: mac // must be fetched from separate storage or from the end of the cipher stream if it was appended
+  mac: mac // must be fetched from separate storage or from the end of the ciphertext stream if it was appended
 });
 ```
