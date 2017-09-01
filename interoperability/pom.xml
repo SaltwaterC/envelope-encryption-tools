@@ -20,6 +20,11 @@
             <artifactId>aws-java-sdk</artifactId>
             <version>1.11.186</version>
         </dependency>
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcprov-jdk15on</artifactId>
+          <version>1.58</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -27,7 +32,8 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.6.0</version>
+                <!-- java.lang.IllegalThreadStateException after 1.2.1 even though it doens't break the build -->
+                <version>1.2.1</version>
                 <executions>
                     <execution>
                         <goals>

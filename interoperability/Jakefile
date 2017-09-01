@@ -1,6 +1,6 @@
 'use strict';
 
-/*global task: true, jake: true, complete: true*/
+/*global desc: true, task: true, jake: true, complete: true*/
 
 var fs = require('fs');
 
@@ -68,6 +68,19 @@ var writeKeys = function(key, callback) {
   });
 };
 
+desc('npm install');
+task('setup', {
+  async: true
+}, function() {
+  jake.exec('npm install', {
+    printStdout: true,
+    printStderr: true
+  }, function() {
+    complete();
+  });
+});
+
+desc('Generates RSA key pair in PEM and DER formats');
 task('keygen', {
   async: true
 }, function() {
@@ -84,6 +97,70 @@ task('keygen', {
   });
 });
 
+desc('Write to S3 using node.js');
+task('node_write', {
+  async: true
+}, function() {
+  var assert = require('assert');
+
+  var AWS = require('aws-sdk');
+  var s3 = new AWS.S3();
+
+  var eet = require('../');
+  var rsa = eet.rsa;
+  var gcm = eet.gcm;
+
+  var buf = [];
+  var len = 0;
+
+  gcm.keyGen(function(err, random) {
+    assert.ifError(err);
+
+    var cipher = gcm.encrypt({
+      key: random.key,
+      iv: random.iv,
+      appendMac: true
+    });
+
+    cipher.on('err', function(err) {
+      assert.ifError(err);
+    });
+
+    cipher.on('data', function(chunk) {
+      buf.push(chunk);
+      len += chunk.length;
+    });
+
+    cipher.on('end', function() {
+      rsa.encrypt('public.pem', rsa.padding.OAEP_SHA_256_MGF1_SHA_1, random.key, function(err, encKey) {
+        assert.ifError(err);
+
+        s3.putObject({
+          Bucket: process.env.EET_BUCKET,
+          Key: 'hello-node.txt',
+          Body: Buffer.concat(buf, len),
+          Metadata: {
+            'x-amz-key-v2': encKey,
+            'x-amz-iv': random.iv.toString('base64'),
+            'x-amz-matdesc': '{}',
+            'x-amz-tag-len': '128',
+            'x-amz-cek-alg': 'AES/GCM/NoPadding',
+            'x-amz-wrap-alg': 'RSA/ECB/OAEPWithSHA-256AndMGF1Padding'
+          }
+        }, function(err, data) {
+          assert.ifError(err);
+          console.log('Written hello-node.txt to S3 bucket %s', process.env.EET_BUCKET);
+          console.log(data);
+          complete();
+        });
+      });
+    });
+
+    cipher.end('hello world! - from node.js to be decrypted in AWS SDK for Java');
+  });
+});
+
+desc('mvn clean compile exec:java');
 task('mvn', {
   async: true
 }, function() {
@@ -95,17 +172,59 @@ task('mvn', {
   });
 });
 
-task('setup', {
+desc('Read from S3 using node.js');
+task('node_read', {
   async: true
 }, function() {
-  jake.exec('npm install', {
-    printStdout: true,
-    printStderr: true
-  }, function() {
-    complete();
+  var assert = require('assert');
+
+  var AWS = require('aws-sdk');
+  var s3 = new AWS.S3();
+
+  var eet = require('../');
+  var rsa = eet.rsa;
+  var gcm = eet.gcm;
+
+  s3.getObject({
+    Bucket: process.env.EET_BUCKET,
+    Key: 'hello-java.txt'
+  }, function(err, obj) {
+    assert.ifError(err);
+    console.log(obj);
+
+    var bodyLen = obj.Body.length;
+    var buf = [];
+    var len = 0;
+
+    rsa.decrypt('private.pem', rsa.padding.OAEP_SHA_256_MGF1_SHA_1, obj.Metadata['x-amz-key-v2'], function(err, decKey) {
+      assert.ifError(err);
+
+      var decipher = gcm.decrypt({
+        key: decKey,
+        iv: new Buffer(obj.Metadata['x-amz-iv'], 'base64'),
+        mac: obj.Body.slice(bodyLen - 16)
+      });
+
+      decipher.on('err', function(err) {
+        assert.ifError(err);
+      });
+
+      decipher.on('data', function(chunk) {
+        buf.push(chunk);
+        len += chunk.length;
+      });
+
+      decipher.on('end', function() {
+        console.log(Buffer.concat(buf, len).toString('utf8'));
+        complete();
+      });
+
+      decipher.end(obj.Body.slice(0, bodyLen - 16));
+    });
   });
 });
 
+desc('Remove build artefacts and dependencies');
 task('clean', {
   async: true
 }, function() {
@@ -128,4 +247,5 @@ task('clean', {
   });
 });
 
-task('default', ['setup', 'keygen', 'mvn']);
+desc('Runs everything and cleans up after itself');
+task('default', ['setup', 'keygen', 'node_write', 'mvn', 'node_read', 'clean']);
