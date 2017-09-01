@@ -76,7 +76,7 @@ task('keygen', {
       var RSA = require('node-rsa');
       console.log('Generating RSA key - takes a while');
       writeKeys(new RSA({
-        b: 512
+        b: 2048
       }), function() {
         complete();
       });
@@ -95,14 +95,37 @@ task('mvn', {
   });
 });
 
-task('default', {
+task('setup', {
   async: true
 }, function() {
   jake.exec('npm install', {
     printStdout: true,
     printStderr: true
   }, function() {
-    jake.Task.keygen.invoke();
     complete();
   });
 });
+
+task('clean', {
+  async: true
+}, function() {
+  var rimraf = require('rimraf');
+
+  [
+    'public.pem',
+    'private.pem',
+    'private.der',
+    'public.der',
+    'package-lock.json',
+    'node_modules',
+    'target'
+  ].forEach(function(path) {
+    rimraf(path, function(err) {
+      if (err) {
+        console.error(err);
+      }
+    });
+  });
+});
+
+task('default', ['setup', 'keygen', 'mvn']);
