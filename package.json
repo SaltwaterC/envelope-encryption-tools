@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "main": "lib/main.js",
   "description": "Lightweight encryption toolkit to support envelope encryption schemes",
+  "license": "MIT",
   "engines": {
     "node": ">= 6"
   },

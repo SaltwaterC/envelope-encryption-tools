@@ -1,0 +1,12 @@
+{
+  "license": "MIT",
+  "description": "interoperability tests with AWS SDK for Java",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/SaltwaterC/envelope-encryption-tools.git"
+  },
+  "dependencies": {
+    "aws-sdk": "= 2.106.0",
+    "node-rsa": "= 0.4.2"
+  }
+}

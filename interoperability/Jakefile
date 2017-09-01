@@ -1,0 +1,108 @@
+'use strict';
+
+/*global task: true, jake: true, complete: true*/
+
+var fs = require('fs');
+
+var findFiles = function(files, callback) {
+  var found = true;
+  var finished = 0;
+
+  var finish = function() {
+    finished++;
+    if (finished === files.length) {
+      callback(found);
+    }
+  };
+
+  files.forEach(function(file) {
+    fs.stat(file, function(err) {
+      if (err) {
+        found = false;
+      }
+      finish();
+    });
+  });
+};
+
+var writeKeys = function(key, callback) {
+  console.log('Write the exported keys');
+
+  var finish = 0;
+  var expect = 4;
+
+  var finished = function(file) {
+    console.log('Written %s key', file);
+    finish++;
+    if (finish === expect) {
+      callback();
+    }
+  };
+
+  fs.writeFile('private.pem', key.exportKey('pkcs8-private-pem'), function(err) {
+    if (err) {
+      return console.error(err);
+    }
+    finished('private.pem');
+  });
+
+  fs.writeFile('public.pem', key.exportKey('pkcs8-public-pem'), function(err) {
+    if (err) {
+      return console.error(err);
+    }
+    finished('public.pem');
+  });
+
+  fs.writeFile('private.der', key.exportKey('pkcs8-private-der'), function(err) {
+    if (err) {
+      return console.error(err);
+    }
+    finished('private.der');
+  });
+
+  fs.writeFile('public.der', key.exportKey('pkcs8-public-der'), function(err) {
+    if (err) {
+      return console.error(err);
+    }
+    finished('public.der');
+  });
+};
+
+task('keygen', {
+  async: true
+}, function() {
+  findFiles(['private.pem', 'public.pem', 'private.der', 'public.der'], function(found) {
+    if (!found) {
+      var RSA = require('node-rsa');
+      console.log('Generating RSA key - takes a while');
+      writeKeys(new RSA({
+        b: 512
+      }), function() {
+        complete();
+      });
+    }
+  });
+});
+
+task('mvn', {
+  async: true
+}, function() {
+  jake.exec('mvn clean compile exec:java', {
+    printStdout: true,
+    printStderr: true
+  }, function() {
+    complete();
+  });
+});
+
+task('default', {
+  async: true
+}, function() {
+  jake.exec('npm install', {
+    printStdout: true,
+    printStderr: true
+  }, function() {
+    jake.Task.keygen.invoke();
+    complete();
+  });
+});

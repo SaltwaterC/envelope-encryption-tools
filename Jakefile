@@ -4,6 +4,8 @@
 
 var findFiles = function(files, extensions, callback) {
   var find = require('find');
+  var finished = 0,
+    dirs = ['lib', 'test'];
 
   for (var i = 0; i < extensions.length; i++) {
     extensions[i] = '\\.' + extensions[i];
@@ -11,11 +13,17 @@ var findFiles = function(files, extensions, callback) {
 
   var exp = new RegExp('(?:' + extensions.join('|') + ')$');
 
-  find.file(exp, 'lib', function(f) {
-    files = files.concat(f);
-    find.file(exp, 'test', function(f) {
-      files = files.concat(f);
+  var found = function() {
+    finished++;
+    if (dirs.length === finished) {
       callback(files);
+    }
+  };
+
+  dirs.forEach(function(dir) {
+    find.file(exp, dir, function(f) {
+      files = files.concat(f);
+      found();
     });
   });
 };
@@ -36,7 +44,7 @@ desc('Runs jshint');
 task('jshint', {
   async: true
 }, function() {
-  findFiles(['Jakefile'], ['js'], function(files) {
+  findFiles(['Jakefile', 'interoperability/Jakefile'], ['js'], function(files) {
     jake.exec('./node_modules/.bin/jshint ' + files.join(' '), {
       printStdout: true,
       printStderr: true
@@ -69,7 +77,7 @@ desc('Runs js-beautify');
 task('beautify', {
   async: true
 }, function() {
-  findFiles(['Jakefile', 'package.json'], ['js', 'json'], function(files) {
+  findFiles(['Jakefile', 'package.json', 'interoperability/Jakefile'], ['js', 'json'], function(files) {
     jake.exec('./node_modules/.bin/js-beautify --end-with-newline --replace --indent-size 2 ' + files.join(' '), {
       printStdout: true,
       printStderr: true
