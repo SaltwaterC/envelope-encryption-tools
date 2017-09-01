@@ -87,9 +87,25 @@ task('beautify', {
   });
 });
 
+desc('Clean dev dependencies');
+task('clean', function() {
+  var rimraf = require('rimraf');
+  [
+    'package-lock.json',
+    'node_modules'
+  ].forEach(function(path) {
+    rimraf(path, function(err) {
+      if (err) {
+        console.error(err);
+      }
+    });
+  });
+});
+
 // task shortcuts
 task('b', ['beautify']);
 task('t', ['test']);
 task('m', ['mocha']);
 task('j', ['jshint']);
 task('s', ['setup']);
+task('c', ['clean']);

@@ -15,7 +15,8 @@
     "chai": "= 4.1.1",
     "js-beautify": "= 1.6.14",
     "find": "= 0.2.7",
-    "jshint": "= 2.9.5"
+    "jshint": "= 2.9.5",
+    "rimraf": "= 2.6.1"
   },
   "homepage": "https://github.com/SaltwaterC/envelope-encryption-tools",
   "author": {

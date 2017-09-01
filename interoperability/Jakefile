@@ -225,9 +225,7 @@ task('node_read', {
 });
 
 desc('Remove build artefacts and dependencies');
-task('clean', {
-  async: true
-}, function() {
+task('clean', function() {
   var rimraf = require('rimraf');
 
   [
