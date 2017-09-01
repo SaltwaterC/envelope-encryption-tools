@@ -186,7 +186,7 @@ Definitions:
  * `IV` - randomly generated 128 bit initialisation vector to be used with AES-256-CBC
  * `NONCE` - randomly generated 96 bit nonce to be used with AES-256-GCM - bear in mind that this library uses "iv" as variable name
 
-`x-amz-matdesc` won't be used, but it's being set to an empty JSON object to avoid interoperability issues. Please observe the [INTEROPERABILITY](interoperability) subproject for more details.
+`x-amz-matdesc` won't be used, but it's being set to an empty JSON object to avoid interoperability issues. Please observe the [interoperability](interoperability) subproject for more details.
 
 ### Envelope V1
 
