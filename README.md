@@ -1,4 +1,4 @@
-## About [![build status](https://secure.travis-ci.org/SaltwaterC/envelope-encryption-tools.png?branch=master)](https://travis-ci.org/SaltwaterC/envelope-encryption-tools)
+## About [![build status](https://secure.travis-ci.org/SaltwaterC/envelope-encryption-tools.png?branch=master)](https://travis-ci.org/SaltwaterC/envelope-encryption-tools) [![NPM version](https://badge.fury.io/js/envelope-encryption-tools.png)](http://badge.fury.io/js/envelope-encryption-tools)
 
 Lightweight encryption toolkit to support envelope encryption schemes. It was implemented for supporting Amazon S3 client-side encryption in node.js i.e it can produce a ciphertext which may be decrypted by the AWS SDK's which implement the client-side encryption (Java, Ruby, Go). However, the implementation itself is general purpose. In fact, it uses the node.js defaults which don't really match the defaults in Amazon's libraries. The scope isn't restricted to the envelope encryption schemes supported by Amazon.
 
