@@ -1,4 +1,5 @@
 {
+  "private": true,
   "license": "MIT",
   "description": "interoperability tests with AWS SDK for Java",
   "repository": {
