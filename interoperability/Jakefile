@@ -122,7 +122,7 @@ task('node_write', {
       appendMac: true
     });
 
-    cipher.on('err', function(err) {
+    cipher.on('error', function(err) {
       assert.ifError(err);
     });
 
@@ -205,7 +205,7 @@ task('node_read', {
         mac: obj.Body.slice(bodyLen - 16)
       });
 
-      decipher.on('err', function(err) {
+      decipher.on('error', function(err) {
         assert.ifError(err);
       });
 
