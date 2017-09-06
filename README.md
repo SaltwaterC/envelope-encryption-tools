@@ -161,7 +161,7 @@ var cipher = cbc.encrypt({
 }); // this is a duplex Stream object - input plaintext - output ciphertext stream
 
 // the decryption stream
-var decipher = gcm.decrypt({
+var decipher = cbc.decrypt({
   key: key,
   iv: iv
 }); // this is a duplex Stream object - input ciphertext - output plaintext
