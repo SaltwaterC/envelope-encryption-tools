@@ -2,7 +2,7 @@
 
 /*global describe: true, it: true, before: true*/
 
-var cbc = require('../lib/main').aes256cbc;
+var cbc = require('..').aes256cbc;
 
 var assert = require('chai').assert;
 

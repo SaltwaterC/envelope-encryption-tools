@@ -5,7 +5,7 @@
 var fs = require('fs');
 var crypto = require('crypto');
 
-var rsa = require('../lib/main').rsa;
+var rsa = require('..').rsa;
 
 var assert = require('chai').assert;
 

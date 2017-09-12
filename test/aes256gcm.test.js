@@ -2,7 +2,7 @@
 
 /*global describe: true, it: true, before: true*/
 
-var gcm = require('../lib/main').aes256gcm;
+var gcm = require('..').aes256gcm;
 
 var assert = require('chai').assert;
 
