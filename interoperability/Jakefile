@@ -106,7 +106,7 @@ task('node_write', {
   var AWS = require('aws-sdk');
   var s3 = new AWS.S3();
 
-  var eet = require('../');
+  var eet = require('..');
   var rsa = eet.rsa;
   var gcm = eet.gcm;
 
@@ -181,7 +181,7 @@ task('node_read', {
   var AWS = require('aws-sdk');
   var s3 = new AWS.S3();
 
-  var eet = require('../');
+  var eet = require('..');
   var rsa = eet.rsa;
   var gcm = eet.gcm;
 
