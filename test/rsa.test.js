@@ -88,6 +88,19 @@ describe('RSA tests', function() {
       });
     });
 
+    it('should decrypt test string with default OAEP padding using passphrase protected RSA private key', function(done) {
+      rsa.decrypt({
+        path: 'test/data/private-protected.pem',
+        passphrase: 'foobar'
+      }, message1, function(err, decrypted) {
+        assert.ifError(err, 'we have an error');
+
+        assert.strictEqual(decrypted.toString('binary'), payload1.toString('binary'), 'the test string is sucessfully decrypted');
+
+        done();
+      });
+    });
+
     it('should decrypt test string with default OAEP padding using crypto module', function(done) {
       fs.readFile('test/data/private.pem', function(err, key) {
         assert.ifError(err, 'we have an error');
