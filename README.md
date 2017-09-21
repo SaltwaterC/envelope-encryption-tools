@@ -52,6 +52,17 @@ rsa.decrypt('path/to/private-key.pem', 'encrypted1', function(err, decrypted1) {
   callback(null, decrypted1); // decrypted1 is a Buffer
 });
 
+// decrypt using passphrase protected RSA private key
+rsa.decrypt({
+  path: 'path/to/private-key-protected.pem',
+  passphrase: 'foo'
+}, 'encrypted1', function(err, decrypted1) {
+  if(err) {
+    return callback(err);
+  }
+  callback(null, decrypted1); // decrypted1 is a Buffer
+});
+
 // the padding used to encrypt must match the padding used to decrypt
 rsa.decrypt('path/to/private-key.pem', rsa.padding.PKCS1_V1_5, 'encrypted2', function(err, decrypted2) {
   // [...]
