@@ -77,8 +77,8 @@ desc('Runs js-beautify');
 task('beautify', {
   async: true
 }, function() {
-  findFiles(['Jakefile', 'package.json', 'interoperability/Jakefile'], ['js', 'json'], function(files) {
-    jake.exec('./node_modules/.bin/js-beautify --end-with-newline --replace --indent-size 2 ' + files.join(' '), {
+  findFiles(['Jakefile', 'package.json', 'interoperability/Jakefile', '.jshintrc', '.jsbeautifyrc'], ['js', 'json'], function(files) {
+    jake.exec('./node_modules/.bin/js-beautify ' + files.join(' '), {
       printStdout: true,
       printStderr: true
     }, function() {
