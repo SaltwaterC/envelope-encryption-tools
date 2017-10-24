@@ -24,7 +24,6 @@ describe('AES-256-GCM tests', function() {
   describe('encrypt', function() {
     it('should encrypt test string', function(done) {
       var buf = [];
-      var len = 0;
 
       var cipher = gcm.encrypt({
         key: key,
@@ -38,13 +37,12 @@ describe('AES-256-GCM tests', function() {
       cipher.on('data', function(chunk) {
         assert.instanceOf(chunk, Buffer, 'a Buffer is passed as data event');
         buf.push(chunk);
-        len += chunk.length;
       });
 
       cipher.on('end', function() {
         assert.instanceOf(cipher.mac, Buffer, 'a Buffer is returned as mac');
         mac1 = cipher.mac;
-        message1 = Buffer.concat(buf, len);
+        message1 = Buffer.concat(buf, cipher.length);
         done();
       });
 
@@ -53,7 +51,6 @@ describe('AES-256-GCM tests', function() {
 
     it('should encrypt test string with appended MAC', function(done) {
       var buf = [];
-      var len = 0;
 
       var cipher = gcm.encrypt({
         key: key,
@@ -68,12 +65,11 @@ describe('AES-256-GCM tests', function() {
       cipher.on('data', function(chunk) {
         assert.instanceOf(chunk, Buffer, 'a Buffer is passed as data event');
         buf.push(chunk);
-        len += chunk.length;
       });
 
       cipher.on('end', function() {
         mac2 = cipher.mac;
-        message2 = Buffer.concat(buf, len);
+        message2 = Buffer.concat(buf, cipher.length);
         done();
       });
 
