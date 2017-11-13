@@ -196,10 +196,12 @@ Definitions:
  * `AES_256_KEY` - randomly generated 256 bit key for AES encryption
  * `IV` - randomly generated 128 bit initialisation vector to be used with AES-256-CBC
  * `NONCE` - randomly generated 96 bit nonce to be used with AES-256-GCM - bear in mind that this library uses "iv" as variable name
+ * `KMS_ENCRYPT` - AWS KMS encryption routine
+ * `UUID` - KMS key ID used to encrypt the envelope key
 
 `x-amz-matdesc` won't be used, but it's being set to an empty JSON object to avoid interoperability issues. Please observe the [interoperability](interoperability) subproject for more details.
 
-### Envelope V1
+### Envelope V1 (RSA)
 
  * `x-amz-key` - BASE64(RSA_ENCRYPT(PUBLIC_KEY, PKCS1_V1_5, AES_256_KEY))
  * `x-amz-iv` - BASE64(IV)
@@ -207,7 +209,7 @@ Definitions:
 
 The cipher used is AES-256-CBC.
 
-### Envelope V2
+### Envelope V2 (RSA)
 
  * `x-amz-key-v2` - BASE64(RSA_ENCRYPT(PUBLIC_KEY, OAEP_SHA_256_MGF1_SHA_1, AES_256_KEY))
  * `x-amz-iv` - BASE64(NONCE)
@@ -221,3 +223,39 @@ The cipher used is AES-256-CBC.
 `x-amz-cek-alg` supports multiple values, however, "AES/CBC/PKCS5Padding" provides no actual benefit over Envelope V1. One might argue that the padding for the key encryption is different. This value would always be set as "AES/GCM/NoPadding".
 
 `x-amz-tag-len` would always be set as "128" to indicate the length of the (G)MAC which is appended to the ciphertext.
+
+### Envelope V2 (KMS)
+
+ * `x-amz-key-v2` - BASE64(KMS_ENCRYPT(AES_256_KEY))
+ * `x-amz-iv` - BASE64(NONCE)
+ * `x-amz-matdesc` - "{"kms_cmk_id": UUID}"
+ * `x-amz-wrap-alg` - "kms"
+ * `x-amz-cek-alg` - "AES/GCM/NoPadding"
+ * `x-amz-tag-len` - "128"
+
+The challenge with KMS is the envelope key decryption which isn't very obvious by reading the AWS docs.
+
+Example:
+
+```javascript
+var AWS = require('aws-sdk');
+
+var s3 = new AWS.S3();
+var kms = new AWS.KMS({
+  region: 'us-east-1' // must be us-east-1 as all the keys created (at least via the AWS console) are created in that region
+});
+
+s3.headObject({
+  Bucket: 'bucket_name',
+  Key: 's3_object_name.txt'
+}, function(err, obj) {
+  // handle err
+  kms.decrypt({
+    CiphertextBlob: new Buffer(obj.Metadata['x-amz-key-v2'], 'base64'),
+    EncryptionContext: JSON.parse(obj.Metadata['x-amz-matdesc'])
+  }, function(err, dec) {
+    // dec.Plaintext is the decrypted envelope key which may be passed as the key arg of gcm.decrypt
+    // obj.ContentLength is also needed for sending the range request which excludes the MAC
+  });
+});
+```
