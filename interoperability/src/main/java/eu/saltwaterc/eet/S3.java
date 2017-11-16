@@ -4,15 +4,10 @@ import java.io.*;
 import java.security.*;
 import java.security.spec.*;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
-
-import com.amazonaws.services.s3.model.EncryptionMaterials;
-import com.amazonaws.services.s3.model.CryptoConfiguration;
-import com.amazonaws.services.s3.model.CryptoMode;
-
-import com.amazonaws.services.s3.AmazonS3EncryptionClient;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.auth.*;
+import com.amazonaws.services.s3.*;
+import com.amazonaws.services.kms.*;
+import com.amazonaws.services.s3.model.*;
 
 public class S3 {
   public static PublicKey getPublicKey(String file) throws Exception {
@@ -41,13 +36,22 @@ public class S3 {
 
   public static void main(String[] args) throws Exception {
     KeyPair kp = new KeyPair(getPublicKey("public.der"), getPrivateKey("private.der"));
+    EncryptionMaterials em = new EncryptionMaterials(kp);
 
-    AWSCredentials credentials = new EnvironmentVariableCredentialsProvider().getCredentials();
-    EncryptionMaterials encryptionMaterials = new EncryptionMaterials(kp);
+    AWSCredentialsProvider credentials = new EnvironmentVariableCredentialsProvider();
+    StaticEncryptionMaterialsProvider encryptionMaterials = new StaticEncryptionMaterialsProvider(em);
     CryptoConfiguration cryptoConf = new CryptoConfiguration(CryptoMode.StrictAuthenticatedEncryption);
-    // this is deprecated, but the non-deprecated interface is too bloody complicated for a non-Java dev
-    // and the documentation is an absolute pile of rubbish
-    AmazonS3EncryptionClient s3 = new AmazonS3EncryptionClient(credentials, encryptionMaterials, cryptoConf);
+
+    AWSKMS kms = AWSKMSClientBuilder.standard()
+      .withCredentials(credentials)
+      .build();
+
+    AmazonS3Encryption s3 = AmazonS3EncryptionClientBuilder.standard()
+      .withCredentials(credentials)
+      .withEncryptionMaterials(encryptionMaterials)
+      .withCryptoConfiguration(cryptoConf)
+      .withKmsClient(kms)
+      .build();
 
     // read object created by node.js
     S3Object downloadedObject = s3.getObject(System.getenv("EET_BUCKET"), "hello-node.txt");
