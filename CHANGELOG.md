@@ -1,3 +1,6 @@
+## 0.1.3
+ * Emit an error event from AES-256-GCM Decrypt if the tag length isn't the default 16 bytes / 128 bits.
+
 ## v0.1.2
  * Add length attribute for gcm.encrypt to simplify the MAC slicing when appendMac is on
 
