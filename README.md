@@ -242,7 +242,7 @@ var AWS = require('aws-sdk');
 
 var s3 = new AWS.S3();
 var kms = new AWS.KMS({
-  region: 'us-east-1' // must be us-east-1 as all the keys created (at least via the AWS console) are created in that region
+  region: 'us-east-1' // pay attention to the region where the key has been created
 });
 
 s3.headObject({
