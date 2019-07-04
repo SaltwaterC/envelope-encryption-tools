@@ -18,12 +18,12 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk</artifactId>
-            <version>1.11.186</version>
+            <version>1.11.461</version>
         </dependency>
         <dependency>
           <groupId>org.bouncycastle</groupId>
           <artifactId>bcprov-jdk15on</artifactId>
-          <version>1.58</version>
+          <version>1.60</version>
         </dependency>
     </dependencies>
 
