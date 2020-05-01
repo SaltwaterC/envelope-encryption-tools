@@ -9,6 +9,12 @@
   "dependencies": {
     "aws-sdk": "= 2.106.0",
     "node-rsa": "= 0.4.2",
-    "rimraf": "= 2.6.1"
-  }
+    "rimraf": "= 2.6.1",
+    "snyk": "^1.316.1"
+  },
+  "scripts": {
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "snyk": true
 }
