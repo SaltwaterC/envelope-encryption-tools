@@ -9,6 +9,6 @@
   "dependencies": {
     "aws-sdk": "= 2.106.0",
     "node-rsa": "= 0.4.2",
-    "rimraf": "= 2.6.1"
+    "rimraf": "4.0.0"
   }
 }
